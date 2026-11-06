@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Выбор способа объявления ПК в сети: системный Bonjour или встроенный mDNS UxPlay.
 
 Встроенный mDNS UxPlay отправляет объявления по маршруту multicast по умолчанию.

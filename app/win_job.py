@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Windows Job Object: дочерние процессы умирают вместе с приложением (даже при падении)."""
 from __future__ import annotations
 

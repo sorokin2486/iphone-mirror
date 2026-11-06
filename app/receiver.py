@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Управление процессом UxPlay (AirPlay-приёмник).
 
 UxPlay сам принимает AirPlay-поток от iPhone, расшифровывает его и играет звук.

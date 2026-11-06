@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Точка входа: python -m app"""
 from __future__ import annotations
 
@@ -7,6 +9,7 @@ import sys
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
+from . import __author__, __brand__, __version__
 from .config import AppConfig, load_config, save_config
 from .main_window import MirrorWindow
 from .paths import ICON_PATH
@@ -20,6 +23,8 @@ def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s: %(message)s")
     app = QApplication(sys.argv)
     app.setApplicationName("iPhone Mirror")
+    app.setApplicationVersion(__version__)
+    app.setOrganizationName(f"{__author__} ({__brand__})")
     if ICON_PATH.is_file():
         app.setWindowIcon(QIcon(str(ICON_PATH)))
 

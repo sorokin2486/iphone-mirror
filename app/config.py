@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Настройки приложения: неизменяемый dataclass + загрузка/сохранение в config.json."""
 from __future__ import annotations
 

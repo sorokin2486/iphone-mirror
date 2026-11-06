@@ -1,4 +1,6 @@
-﻿# Сборка установщика dist\iPhoneMirror-Setup-<версия>.exe (Inno Setup 6).
+﻿# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
+# Сборка установщика dist\iPhoneMirror-Setup-<версия>.exe (Inno Setup 6).
 # Сначала нужно собрать приложение: setup\build_exe.ps1  (или передайте -BuildExe).
 # Запуск:  powershell -ExecutionPolicy Bypass -File setup\build_installer.ps1 [-BuildExe]
 param([switch]$BuildExe)

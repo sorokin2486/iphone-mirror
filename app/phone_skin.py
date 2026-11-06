@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Геометрия и отрисовка корпуса «iPhone» (в портретных единицах, без Qt-виджетов)."""
 from __future__ import annotations
 

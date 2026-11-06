@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Чистая логика масштабирования окна: зоны захвата краёв и расчёт масштаба при перетаскивании."""
 from __future__ import annotations
 

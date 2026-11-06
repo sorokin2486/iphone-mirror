@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 # Сборка UxPlay в MSYS2 (окружение UCRT64). Запускается из setup/install.ps1.
 set -euo pipefail
 

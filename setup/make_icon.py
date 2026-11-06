@@ -1,4 +1,7 @@
-"""Рисует иконку приложения (assets/icon.png + icon.ico) тем же кодом, что и окно."""
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
+"""Рисует иконку приложения (assets/icon.png + icon.ico) тем же кодом, что и окно,
+и добавляет фирменную плашку «dev»."""
 import sys
 from pathlib import Path
 
@@ -13,6 +16,7 @@ from app import phone_skin as skin  # noqa: E402
 from app.lock_screen import paint_wallpaper  # noqa: E402
 
 SIZE = 256
+BADGE = ROOT / "assets" / "badge-dev.png"
 
 
 def render() -> QImage:
@@ -38,8 +42,21 @@ def render() -> QImage:
     p.drawRoundedRect(QRectF(c.x() - w * 0.25, c.y() - w * 0.2, w * 0.8, w * 0.65), w * 0.1, w * 0.1)
     p.restore()
     skin.paint_island(p, layout, scale, active=False)
+    p.resetTransform()
+    paint_badge(p)
     p.end()
     return img
+
+
+def paint_badge(p: QPainter) -> None:
+    """Фирменная плашка «dev» (sorokin dev) в правом нижнем углу иконки."""
+    badge = QImage(str(BADGE))
+    if badge.isNull():
+        print("WARN: нет assets/badge-dev.png — запустите setup/make_brand_assets.py")
+        return
+    w = SIZE * 0.62
+    h = w * badge.height() / badge.width()
+    p.drawImage(QRectF(SIZE - w, SIZE - h, w, h), badge)
 
 
 if __name__ == "__main__":

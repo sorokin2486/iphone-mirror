@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Общий QApplication (offscreen) для всех тестов: виджетам нужен именно он."""
 import os
 

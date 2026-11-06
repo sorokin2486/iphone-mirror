@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Экран-заглушка в стиле экрана блокировки iOS, пока нет трансляции."""
 from __future__ import annotations
 

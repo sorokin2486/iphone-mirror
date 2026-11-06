@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Локальный TCP-сервер: принимает H.264 (Annex-B) от UxPlay и декодирует кадры."""
 from __future__ import annotations
 

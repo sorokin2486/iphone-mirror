@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 # Сборка варианта UxPlay, который объявляет себя через системную службу Bonjour
 # (cmake -DUSE_DNS_SD=1) -> /ucrt64/bin/uxplay-bonjour.exe.
 #

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Тесты конфигурации, аргументов UxPlay и видеоконвейера (без iPhone)."""
 from __future__ import annotations
 

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Пути приложения: работа из исходников и из собранного .exe (PyInstaller)."""
 from __future__ import annotations
 
@@ -11,6 +13,7 @@ IS_FROZEN = getattr(sys, "frozen", False)
 # Ресурсы: внутри .exe — каталог _internal (sys._MEIPASS), иначе корень проекта.
 RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
 ICON_PATH = RESOURCE_DIR / "assets" / "icon.png"
+LOGO_PATH = RESOURCE_DIR / "assets" / "logo-dark.png"
 BUNDLED_UXPLAY_DIR = RESOURCE_DIR / "uxplay"
 BUNDLED_UXPLAY = BUNDLED_UXPLAY_DIR / "bin" / "uxplay.exe"
 

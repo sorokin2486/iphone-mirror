@@ -1,182 +1,175 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.png">
+  <img src="assets/logo-light.png" alt="sorokin dev" width="300">
+</picture>
+
 # iPhone Mirror
 
-Вывод экрана и звука iPhone на Windows-ПК — по Wi‑Fi, через стандартный «Повтор экрана» (AirPlay),
-как ApowerMirror. Картинка показывается в окне, нарисованном в виде iPhone (титановая рамка,
-Dynamic Island, кнопки), окно само поворачивается в ландшафт, когда поворачиваете телефон.
+**Your iPhone's screen and sound on a Windows PC — in a window that looks like an iPhone.**
+**Over Wi‑Fi or a cable. Free, open source, no watermarks, no accounts.**
 
-## Скачать
+[![Release](https://img.shields.io/github/v/release/sorokin2486/iphone-mirror?color=7c3aed&label=download)](https://github.com/sorokin2486/iphone-mirror/releases/latest)
+![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-7c3aed)
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-7c3aed)](LICENSE)
 
-Готовый установщик — на странице **Releases** (`iPhoneMirror-Setup-<версия>.exe`).
-Python, MSYS2 и GStreamer ставить не нужно: всё уже внутри. При установке можно
-отметить «Разрешить в брандмауэре», чтобы iPhone сразу увидел ПК.
+**English** · [Русский](README.ru.md)
 
-Требования: Windows 10/11 x64, iPhone/iPad с iOS 12+ в той же Wi‑Fi‑сети.
+<img src="docs/images/hero.png" alt="iPhone Mirror — four titanium colors" width="100%">
 
-## Подключение по кабелю (USB)
+### [⬇ Download the installer](https://github.com/sorokin2486/iphone-mirror/releases/latest)
 
-Можно обойтись без Wi‑Fi и роутера — трансляция идёт прямо по кабелю:
+</div>
 
-1. На iPhone: **Настройки → Режим модема → «Разрешать другим»** — включить.
-2. Подключите iPhone к ПК кабелем и нажмите на iPhone «Доверять».
-3. В окне появится зелёная плашка **USB** (приложение само находит сеть iPhone
-   `172.20.10.0/28` и перезапускает приёмник, чтобы iPhone его увидел).
-4. **Пункт управления → Повтор экрана → «iPhone Mirror PC»**.
+---
 
-Нужно:
-* драйвер Apple — приложение «Устройства Apple» (Microsoft Store) или iTunes;
-* на iPhone должен быть доступен «Режим модема» (зависит от оператора/SIM).
+## Why it's cool
 
-Видео идёт по кабелю и мобильный трафик не тратит. Если Windows начнёт ходить в интернет
-через iPhone, выключите на iPhone «Сотовые данные» — трансляции это не мешает.
-Установщик добавляет для этого правило брандмауэра, разрешающее UxPlay только
-подсеть iPhone (`172.20.10.0/28`), т.к. Windows обычно считает эту сеть «общедоступной».
+- **Zero setup.** One ~95 MB installer. No Python, no codec packs, no drivers, no sign-ups.
+  Open Control Center → Screen Mirroring → **iPhone Mirror PC**. Done.
+- **Picture *and* sound.** Video is shown in the window; audio plays through your PC speakers.
+- **Works over a cable.** No Wi‑Fi, a guest network or a picky router? Plug the iPhone in over USB
+  and turn on Personal Hotspot. The app detects the cable link by itself.
+- **Works with a VPN on.** Most AirPlay receivers go silent when a TUN‑mode VPN (sing-box, Hiddify, …)
+  is running. iPhone Mirror announces itself through Bonjour on every network interface, so the
+  iPhone still finds your PC.
+- **Looks like an iPhone, not like a tool.** A titanium frame in 4 colors, Dynamic Island with a live
+  "streaming" dot, side buttons, an iOS‑style lock screen while it waits. It rotates to landscape
+  together with your phone.
+- **Resizable the natural way.** Drag any edge or corner of the phone, or press Ctrl + / − / 0,
+  or pick 50–150% / "fit screen height". It never grows larger than your screen.
+- **Respectful to your system.** One instance only. The receiver process is tied to the app and can't
+  be left running in the background. The firewall rule only allows devices **from your local network**.
+- **Free and open source (GPL‑3.0).** No watermark, no time limit, no ads, no telemetry.
 
-Почему не «чистый» USB, как у QuickTime на Mac: на Windows для этого пришлось бы заменить
-драйвер Apple на WinUSB, после чего перестанут работать iTunes/«Устройства Apple».
+<table>
+<tr>
+<td width="60%"><img src="docs/images/landscape.png" alt="Landscape mode"></td>
+<td width="40%"><img src="docs/images/usb.png" alt="Cable connection — the USB badge"></td>
+</tr>
+<tr>
+<td align="center"><sub>Rotates together with the iPhone</sub></td>
+<td align="center"><sub>The green <b>USB</b> badge appears when the cable link is up</sub></td>
+</tr>
+</table>
 
-## VPN
+## Quick start
 
-Сам поток идёт по локальной сети, VPN его обычно не трогает. Проблема бывает с **поиском**:
-iPhone находит ПК по mDNS (multicast), а VPN в режиме TUN (sing-box, MantaRay, Hiddify…)
-забирает себе маршрут multicast — объявления уходят в туннель, и iPhone ПК не видит.
+1. Download and run **`iPhoneMirror-Setup-<version>.exe`** from
+   [Releases](https://github.com/sorokin2486/iphone-mirror/releases/latest).
+   Leave **"Allow iPhone Mirror through Windows Firewall"** checked.
+2. On the iPhone: **Control Center → Screen Mirroring → iPhone Mirror PC**.
 
-Поэтому, если на ПК есть служба **Bonjour** (ставится с iTunes / «Устройствами Apple»),
-приложение использует вариант UxPlay, который объявляет себя через Bonjour — он рассылает
-объявления во все сети (Ethernet, Wi‑Fi, USB) независимо от VPN. Без Bonjour используется
-встроенный mDNS. Режим можно задать в `config.json`: `"mdns_mode": "auto" | "bonjour" | "internal"`.
+Requirements: Windows 10/11 x64, an iPhone or iPad with iOS 12+, on the same network as the PC (or over a cable, see below).
 
-На iPhone VPN мешает, только если в нём включено «блокировать локальную сеть» / kill switch.
+### Over a cable (USB)
 
-## Как это устроено
+1. iPhone: **Settings → Personal Hotspot → Allow Others to Join** — on.
+2. Connect the cable and tap **Trust** on the iPhone.
+3. A green **USB** badge appears in the window → Screen Mirroring → **iPhone Mirror PC**.
 
-```
-iPhone ──AirPlay (Wi‑Fi)──► uxplay.exe ──► звук: сразу в колонки ПК
-                               │
-                               └─ видео H.264 (-vrtp → TCP 127.0.0.1:47011)
-                                          │
-                                          ▼
-                     app (Python/PySide6): PyAV декодирует → окно‑iPhone
-```
+You need Apple's USB driver (the **Apple Devices** app from Microsoft Store, or iTunes). Video goes
+over the cable and uses no mobile data. If Windows starts using the iPhone for internet access, turn
+off **Cellular Data** on the iPhone — mirroring keeps working.
 
-* **UxPlay** — открытый AirPlay‑приёмник (GPL‑3, https://github.com/FDH2/UxPlay). Он делает
-  самое сложное: рукопожатие AirPlay, расшифровку потока и воспроизведение звука.
-* **Приложение** запускает UxPlay, забирает у него видеопоток и рисует его внутри «айфона».
+### Controls
 
-## Установка (один раз)
-
-Нужен Python 3.10+ (у вас 3.12 — подходит) и интернет.
-
-```powershell
-powershell -ExecutionPolicy Bypass -File setup\install.ps1
-```
-
-Скрипт:
-1. создаёт `.venv` и ставит PySide6, PyAV, numpy;
-2. ставит MSYS2 через `winget` (если его нет);
-3. ставит GStreamer и собирает `uxplay.exe` → `C:\msys64\ucrt64\bin\uxplay.exe`.
-
-Сборка занимает ~5–15 минут.
-
-## Готовое приложение (.exe)
-
-```powershell
-powershell -ExecutionPolicy Bypass -File setup\build_exe.ps1
-```
-
-Результат — папка `dist\iPhone Mirror\` (~350 МБ) с `iPhone Mirror.exe`.
-Внутри уже есть UxPlay и нужная часть GStreamer, поэтому на другом ПК **не нужны**
-ни Python, ни MSYS2 — достаточно скопировать всю папку. Настройки .exe хранит в
-`%APPDATA%\iPhone Mirror\config.json`.
-
-Скрипт: ставит PyInstaller в `.venv`, собирает переносимый комплект UxPlay
-(`setup\bundle_uxplay.sh` — только нужные плагины и их DLL), рисует иконку
-(`setup\make_icon.py`) и упаковывает приложение.
-
-## Установщик
-
-```powershell
-powershell -ExecutionPolicy Bypass -File setup\build_installer.ps1 -BuildExe
-```
-
-Собирает `.exe` и упаковывает его в `dist\iPhoneMirror-Setup-<версия>.exe` (Inno Setup 6,
-ставится автоматически через winget). Версия берётся из `app/__init__.py`.
-
-## Запуск из исходников
-
-* `run.bat` — обычный запуск (без консоли);
-* `run_debug.bat` — с консолью, если что-то не работает.
-
-При первом запуске Windows спросит доступ в сеть для `uxplay.exe` — **разрешите для частных сетей**,
-иначе iPhone не увидит ПК.
-
-На iPhone: **Пункт управления → Повтор экрана → «iPhone Mirror PC»**.
-iPhone и ПК должны быть в одной Wi‑Fi‑сети.
-
-## Управление
-
-| Действие | Как |
+| Action | How |
 |---|---|
-| Двигать окно | зажать ЛКМ на телефоне |
-| Масштаб | тянуть за край или угол телефона; Ctrl + колесо; Ctrl + / Ctrl − / Ctrl 0; ПКМ → Масштаб (50–150%, «По высоте экрана») |
-| Меню | ПКМ: поверх всех окон, цвет корпуса, звук вкл/выкл, имя приёмника, журнал, перезапуск |
-| Скриншот экрана iPhone | Ctrl+S (сохраняется в `Изображения\iPhone Mirror`) |
-| Свернуть | двойной клик |
-| Выход | Ctrl+Q |
+| Move the window | drag the phone |
+| Resize | drag an edge/corner · Ctrl + mouse wheel · Ctrl + / Ctrl − / Ctrl 0 · right‑click → Scale |
+| Menu | right‑click: always on top, frame color, sound on/off, receiver name, USB help, log, about |
+| Screenshot of the iPhone screen | Ctrl + S (saved to `Pictures\iPhone Mirror`) |
+| Minimize / quit | double‑click / Ctrl + Q |
 
-Настройки сохраняются в `config.json` (создаётся автоматически):
-`device_name`, `video_port`, `max_resolution` (по умолчанию `1920x1920`, чтобы и портрет,
-и ландшафт были чёткими), `fps`, `audio_enabled`, `uxplay_path` (если uxplay лежит в другом месте).
+## How it's built
 
-## Если не работает
-
-* **iPhone не видит ПК** — проверьте брандмауэр (порты UxPlay: TCP 7000, 7001, 7100; UDP 6000, 6001, 7011),
-  одну сеть, и что роутер не изолирует клиентов Wi‑Fi.
-* **Подключается, но чёрный экран** — откройте ПКМ → «Журнал UxPlay». Чаще всего не хватает
-  плагина GStreamer: перезапустите `setup\install.ps1`.
-* **Звук есть, видео нет** — порт 47011 занят: поменяйте `video_port` в `config.json`.
-
-## Разработка
-
-```powershell
-.venv\Scripts\python -m pip install pytest
-.venv\Scripts\python -m pytest -q
+```mermaid
+flowchart LR
+    A[iPhone<br/>Screen Mirroring] -- AirPlay over Wi‑Fi<br/>or USB hotspot --> B[UxPlay<br/>AirPlay receiver]
+    B -- decrypted audio --> C[(PC speakers)]
+    B -- H.264 via -vrtp<br/>TCP 127.0.0.1 --> D[Video server<br/>PyAV decoder]
+    D -- latest frame only --> E[PySide6 window<br/>painted iPhone]
+    F[Bonjour] -. announces the PC<br/>on every interface .-> A
 ```
 
-Структура:
+The hard part — the AirPlay handshake and stream decryption — is done by the open‑source
+[UxPlay](https://github.com/FDH2/UxPlay). Everything around it was engineered for this app:
+
+- **Video tap without patching UxPlay.** UxPlay's `-vrtp` option is meant to send RTP to OBS. Here it
+  gets a tiny GStreamer tail (`rtph264depay ! h264parse ! tcpclientsink`) that turns the stream back into
+  raw H.264 and hands it to the app over local TCP. The app decodes it with PyAV (FFmpeg).
+- **No lag build‑up.** Decoding runs on its own thread and keeps only the *latest* frame. If the UI is
+  briefly busy, old frames are dropped instead of queued, so the picture never falls behind the phone.
+- **VPN‑proof discovery.** A TUN VPN takes over the multicast route, so mDNS announcements end up in
+  the tunnel. If Bonjour is present, the app runs a second UxPlay build linked against the system
+  `dnssd.dll`. Bonjour announces on all interfaces (Ethernet, Wi‑Fi, USB). Apple's SDK needs an Apple ID,
+  so the build makes its own: the header from Apple's open `mDNSResponder` sources plus an import
+  library generated from the DLL.
+- **Cable detection.** iPhone Personal Hotspot always uses `172.20.10.0/28`. The app watches the network
+  interfaces, tells a USB link (Ethernet type) from a Wi‑Fi hotspot, and restarts the receiver so the
+  new link gets announced.
+- **Clean process handling.** UxPlay runs inside a Windows Job Object with *kill on close*, so it can't
+  outlive the app even after a crash. A local socket keeps a single instance and brings the existing
+  window to the front.
+- **Portable media stack.** Only the GStreamer plugins UxPlay actually uses are bundled (found with
+  `ldd`), and unused Qt modules are stripped. The installer is about 95 MB.
+- **The phone is drawn, not a bitmap.** The frame, island, buttons and lock screen are painted with
+  QPainter, so the window stays crisp at any scale and in landscape.
+
+## Troubleshooting
+
+- **The iPhone doesn't see the PC.** Same network? No client isolation on the router? With a VPN on,
+  make sure Bonjour is installed (it comes with Apple Devices / iTunes). The first line of
+  right‑click → *UxPlay log* should read "Bonjour".
+- **"Unable to connect".** The firewall is blocking it. Reinstall and keep the firewall checkbox ticked.
+- **Black screen.** Right‑click → *Restart receiver*. If it persists, open an issue with the log attached.
+
+## Build from source
+
+```powershell
+powershell -ExecutionPolicy Bypass -File setup\install.ps1          # .venv, MSYS2, GStreamer, UxPlay (+ Bonjour variant)
+powershell -ExecutionPolicy Bypass -File setup\build_installer.ps1 -BuildExe   # dist\iPhoneMirror-Setup-<ver>.exe
+.venv\Scripts\python -m pytest -q                                  # tests
+```
+
+<details>
+<summary>Project structure</summary>
 
 ```
 app/
-  __main__.py      точка входа, связывает всё вместе
-  config.py        настройки (immutable dataclass + config.json)
-  receiver.py      запуск/остановка UxPlay, аргументы командной строки, журнал
-  video_stream.py  TCP‑сервер + H.264‑декодер (PyAV), только последний кадр
-  phone_skin.py    геометрия и отрисовка корпуса iPhone
-  lock_screen.py   заглушка «экран блокировки», пока нет трансляции
-  phone_view.py    виджет: корпус + видео, поворот в ландшафт
-  main_window.py   безрамочное окно, меню, масштаб, скриншоты
-  paths.py         пути для режима исходников и .exe
-  win_job.py       Job Object: uxplay.exe завершается вместе с приложением
-  usb_link.py      определение iPhone по кабелю / через точку доступа
-  bonjour.py       выбор объявления в сети: Bonjour или встроенный mDNS
-  scaling.py       масштаб окна: зоны краёв, расчёт при перетаскивании, предел экрана
-  single_instance.py  запуск только одной копии приложения
-assets/            иконка
-iphone_mirror.py   точка входа для PyInstaller
-setup/
-  install.ps1      установка всего
-  build_uxplay.sh  сборка UxPlay в MSYS2
-  build_uxplay_bonjour.sh  вариант UxPlay с Bonjour (uxplay-bonjour.exe)
-  build_exe.ps1    сборка .exe
-  bundle_uxplay.sh переносимый комплект UxPlay + GStreamer
-  make_icon.py     генерация иконки
-  build_installer.ps1  сборка установщика
-installer/
-  iPhoneMirror.iss скрипт Inno Setup
-tests/test_core.py
+  __main__.py         entry point, wires everything together
+  receiver.py         UxPlay process: arguments, log, restart
+  bonjour.py          Bonjour vs built-in mDNS
+  video_stream.py     local TCP server + H.264 decoder, latest-frame buffer
+  usb_link.py         cable / hotspot detection
+  phone_skin.py       iPhone frame geometry and painting
+  lock_screen.py      iOS-style waiting screen
+  phone_view.py       phone + video widget, landscape rotation
+  main_window.py      frameless window, menu, screenshots
+  scaling.py          edge-drag scaling math
+  single_instance.py  one instance only
+  win_job.py          Job Object: UxPlay dies with the app
+  about_dialog.py     About window
+setup/                install, UxPlay builds, bundling, icon, screenshots, exe and installer builds
+installer/            Inno Setup script
+tests/                pytest
 ```
+</details>
 
-## Лицензия
+## Author
 
-GPL-3.0 (см. `LICENSE`) — проект встраивает UxPlay, распространяемый под GPL-3.0.
-Список сторонних компонентов и их лицензий — в `THIRD_PARTY_NOTICES.md`.
-AirPlay — торговая марка Apple Inc.; проект не связан с Apple.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.png">
+  <img src="assets/logo-light.png" alt="sorokin dev" width="180">
+</picture>
+
+**Ivan Sorokin (Сорокин Иван)** — *sorokin dev* · [github.com/sorokin2486](https://github.com/sorokin2486)
+
+## License
+
+© 2026 Ivan Sorokin (sorokin dev). Released under [GPL‑3.0‑or‑later](LICENSE). The project includes UxPlay (GPL‑3.0).
+Third‑party components are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+The "sorokin dev" logo is not covered by the GPL.
+AirPlay and iPhone are trademarks of Apple Inc. This project is not affiliated with Apple.

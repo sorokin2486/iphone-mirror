@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 # Собирает переносимый комплект UxPlay + GStreamer (только нужные плагины и их DLL)
 # в каталог $1. Запускается в MSYS2 UCRT64 из build_exe.ps1.
 set -euo pipefail

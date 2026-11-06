@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Безрамочное окно-«айфон»: перетаскивание, масштаб (края, колесо, клавиши), меню."""
 from __future__ import annotations
 
@@ -9,6 +11,7 @@ from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QKeySequence, 
 from PySide6.QtWidgets import (QApplication, QDialog, QInputDialog, QLabel, QMenu, QMessageBox,
                                QPlainTextEdit, QVBoxLayout, QWidget)
 
+from .about_dialog import AboutDialog
 from .config import COLORS, AppConfig
 from .phone_view import PhoneView
 from .scaling import (PRESETS_PERCENT, anchored_pos, clamp_scale, edge_at, max_scale_for,
@@ -231,6 +234,7 @@ class MirrorWindow(QWidget):
         menu.addSeparator()
         menu.addAction("Перезапустить приёмник", self.restart_requested.emit)
         menu.addAction("Журнал UxPlay", self.show_log)
+        menu.addAction("О программе…", lambda: AboutDialog(self).exec())
         menu.addAction("Свернуть  (двойной клик)", self.showMinimized)
         menu.addAction("Выход  (Ctrl+Q)", QApplication.quit)
         return menu

@@ -1,4 +1,6 @@
-﻿# Сборка переносимого приложения: dist\iPhone Mirror\iPhone Mirror.exe
+﻿# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
+# Сборка переносимого приложения: dist\iPhone Mirror\iPhone Mirror.exe
 # Требует: выполненный setup\install.ps1 (MSYS2 + собранный UxPlay, .venv).
 # Запуск:  powershell -ExecutionPolicy Bypass -File setup\build_exe.ps1
 $ErrorActionPreference = "Stop"
@@ -24,9 +26,14 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Сборка комплекта UxPlay не удалась" }
 } finally { Pop-Location }
 
-Write-Host "==> [3/4] Иконка" -ForegroundColor Cyan
+Write-Host "==> [3/4] Логотип, иконка, сведения о версии" -ForegroundColor Cyan
+& $py (Join-Path $PSScriptRoot "make_brand_assets.py")
+if ($LASTEXITCODE -ne 0) { throw "Не удалось подготовить логотип" }
 & $py (Join-Path $PSScriptRoot "make_icon.py")
 if ($LASTEXITCODE -ne 0) { throw "Не удалось создать иконку" }
+$versionFile = Join-Path $root "build\version_info.txt"
+& $py (Join-Path $PSScriptRoot "version_info.py") $versionFile
+if ($LASTEXITCODE -ne 0) { throw "Не удалось создать файл версии" }
 
 Write-Host "==> [4/4] Сборка .exe" -ForegroundColor Cyan
 Push-Location $root
@@ -35,6 +42,7 @@ try {
     & $py -m PyInstaller --noconfirm --clean --windowed `
         --name "iPhone Mirror" `
         --icon (Join-Path $root "assets\icon.ico") `
+        --version-file $versionFile `
         --add-data ((Join-Path $root "assets") + ";assets") `
         --exclude-module tkinter `
         --distpath dist --workpath "build\pyinstaller" --specpath build `

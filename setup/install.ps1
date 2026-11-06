@@ -1,4 +1,6 @@
-﻿# Установка зависимостей iPhone Mirror:
+﻿# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
+# Установка зависимостей iPhone Mirror:
 #   1) Python-пакеты (PySide6, PyAV, numpy)
 #   2) MSYS2 (через winget), если его нет
 #   3) Сборка AirPlay-приёмника UxPlay с GStreamer

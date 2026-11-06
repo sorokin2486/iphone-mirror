@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Сорокин Иван (sorokin dev)
 """Определение прямого подключения к iPhone (USB-кабель или Wi‑Fi-точка iPhone).
 
 В «Режиме модема» iPhone всегда раздаёт подсеть 172.20.10.0/28 и сам имеет адрес

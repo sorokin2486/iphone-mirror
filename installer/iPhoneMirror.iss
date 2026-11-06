@@ -1,4 +1,6 @@
-﻿; Установщик iPhone Mirror (Inno Setup 6).
+﻿; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 Сорокин Иван (sorokin dev)
+; Установщик iPhone Mirror (Inno Setup 6).
 ; Собирается скриптом setup\build_installer.ps1 после setup\build_exe.ps1.
 
 #ifndef AppVersion
@@ -15,8 +17,15 @@ AppId={{6F2C4B1E-8A7D-4E39-9C1B-5D7A2E4F8B31}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-AppPublisher=iPhone Mirror
+AppPublisher=Сорокин Иван (sorokin dev)
+AppPublisherURL=https://github.com/sorokin2486/iphone-mirror
+AppSupportURL=https://github.com/sorokin2486/iphone-mirror/issues
+AppUpdatesURL=https://github.com/sorokin2486/iphone-mirror/releases
+AppCopyright=© 2026 Сорокин Иван (sorokin dev). GPL-3.0
 VersionInfoVersion={#AppVersion}
+VersionInfoCompany=Сорокин Иван (sorokin dev)
+VersionInfoCopyright=© 2026 Сорокин Иван (sorokin dev)
+VersionInfoDescription=Установщик iPhone Mirror
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
