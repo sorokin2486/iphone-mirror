@@ -45,8 +45,8 @@ Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [CustomMessages]
-russian.Firewall=Разрешить iPhone Mirror в брандмауэре Windows (частные сети и iPhone по USB)
-english.Firewall=Allow iPhone Mirror through Windows Firewall (private networks and iPhone over USB)
+russian.Firewall=Разрешить iPhone Mirror в брандмауэре Windows (только локальная сеть и iPhone по USB)
+english.Firewall=Allow iPhone Mirror through Windows Firewall (local network and iPhone over USB only)
 russian.Launch=Запустить iPhone Mirror
 english.Launch=Launch iPhone Mirror
 
@@ -65,13 +65,17 @@ Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Run]
+; Сначала убираем старые правила (повторная установка / обновление не плодит дубли).
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""{#FirewallRule}"""; Flags: runhidden; Tasks: firewall
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""{#FirewallRuleUsb}"""; Flags: runhidden; Tasks: firewall
+; Домашнюю сеть Windows часто помечает «общедоступной», а сеть iPhone по USB — всегда.
+; Поэтому: любой профиль, но только устройства из локальной подсети (не из интернета).
+; Правило нужно для обоих вариантов UxPlay — обычного и с Bonjour.
 Filename: "{sys}\netsh.exe"; \
-  Parameters: "advfirewall firewall add rule name=""{#FirewallRule}"" dir=in action=allow profile=private program=""{app}\_internal\uxplay\bin\uxplay.exe"" enable=yes"; \
+  Parameters: "advfirewall firewall add rule name=""{#FirewallRule}"" dir=in action=allow profile=any remoteip=localsubnet program=""{app}\_internal\uxplay\bin\uxplay.exe"" enable=yes"; \
   Flags: runhidden; Tasks: firewall
-; Сеть iPhone по USB Windows обычно считает «общедоступной», поэтому отдельное
-; правило: любой профиль, но только для подсети «Режима модема» iPhone.
 Filename: "{sys}\netsh.exe"; \
-  Parameters: "advfirewall firewall add rule name=""{#FirewallRuleUsb}"" dir=in action=allow profile=any remoteip=172.20.10.0/28 program=""{app}\_internal\uxplay\bin\uxplay.exe"" enable=yes"; \
+  Parameters: "advfirewall firewall add rule name=""{#FirewallRule}"" dir=in action=allow profile=any remoteip=localsubnet program=""{app}\_internal\uxplay\bin\uxplay-bonjour.exe"" enable=yes"; \
   Flags: runhidden; Tasks: firewall
 Filename: "{app}\{#AppExe}"; Description: "{cm:Launch}"; Flags: nowait postinstall skipifsilent
 

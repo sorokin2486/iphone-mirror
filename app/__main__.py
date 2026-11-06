@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication
 from .config import AppConfig, load_config, save_config
 from .main_window import MirrorWindow
 from .paths import ICON_PATH
+from .single_instance import InstanceServer, notify_running_instance
 from .usb_link import LinkMonitor
 from .receiver import UxPlayReceiver
 from .video_stream import VideoServer
@@ -21,6 +22,11 @@ def main() -> int:
     app.setApplicationName("iPhone Mirror")
     if ICON_PATH.is_file():
         app.setWindowIcon(QIcon(str(ICON_PATH)))
+
+    if notify_running_instance():
+        return 0   # уже запущено — то окно само покажется
+    instance = InstanceServer()
+    instance.listen()
 
     state = {"cfg": load_config()}
     receiver = UxPlayReceiver(state["cfg"])
@@ -68,6 +74,13 @@ def main() -> int:
             receiver.restart()
 
     links.link_changed.connect(on_link)
+
+    def activate() -> None:
+        window.showNormal()
+        window.raise_()
+        window.activateWindow()
+
+    instance.activate_requested.connect(activate)
 
     def shutdown() -> None:
         receiver.stop()

@@ -31,6 +31,7 @@ class PhoneView(QWidget):
         self._streaming = False
         self._link_kind: str | None = None
         self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setMouseTracking(True)       # курсор-стрелки над краями корпуса
         self._clock = QTimer(self, interval=CLOCK_REFRESH_MS, timeout=self.update)
         self._clock.start()
         self._apply_size()
@@ -44,6 +45,15 @@ class PhoneView(QWidget):
     @property
     def current_image(self) -> QImage | None:
         return self._image if self._streaming else None
+
+    @property
+    def scale(self) -> float:
+        return self._scale
+
+    def body_rect(self) -> QRectF:
+        """Корпус телефона в координатах виджета (с учётом поворота)."""
+        layout = skin.PhoneLayout.create(self._scale)
+        return self._transform(layout).mapRect(layout.body)
 
     def set_scale(self, scale: float) -> None:
         self._scale = scale

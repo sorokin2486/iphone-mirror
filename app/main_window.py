@@ -1,21 +1,29 @@
-"""Безрамочное окно-«айфон»: перетаскивание, масштаб колесом, контекстное меню."""
+"""Безрамочное окно-«айфон»: перетаскивание, масштаб (края, колесо, клавиши), меню."""
 from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtCore import QPoint, QPointF, QRectF, QSizeF, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QKeySequence, QShortcut
-from PySide6.QtWidgets import (QApplication, QDialog, QInputDialog, QMenu, QMessageBox,
+from PySide6.QtWidgets import (QApplication, QDialog, QInputDialog, QLabel, QMenu, QMessageBox,
                                QPlainTextEdit, QVBoxLayout, QWidget)
 
-from .config import COLORS, SCALE_MAX, SCALE_MIN, AppConfig
+from .config import COLORS, AppConfig
 from .phone_view import PhoneView
+from .scaling import (PRESETS_PERCENT, anchored_pos, clamp_scale, edge_at, max_scale_for,
+                      scale_from_drag)
 
-SIZE_PRESETS = (("Маленький", 0.55), ("Средний", 0.8), ("Большой", 1.05))
 COLOR_NAMES = {"natural": "Натуральный титан", "black": "Чёрный титан",
                "white": "Белый титан", "blue": "Синий титан"}
 SCALE_STEP = 0.05
+TOAST_MS = 900
+EDGE_CURSORS = {
+    "left": Qt.SizeHorCursor, "right": Qt.SizeHorCursor,
+    "top": Qt.SizeVerCursor, "bottom": Qt.SizeVerCursor,
+    "topleft": Qt.SizeFDiagCursor, "bottomright": Qt.SizeFDiagCursor,
+    "topright": Qt.SizeBDiagCursor, "bottomleft": Qt.SizeBDiagCursor,
+}
 SCREENSHOT_DIR = Path.home() / "Pictures" / "iPhone Mirror"
 USB_HELP = (
     "Трансляция по кабелю — без Wi‑Fi и роутера:\n\n"
@@ -59,10 +67,23 @@ class MirrorWindow(QWidget):
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.addWidget(self.view)
+        self._drag: tuple[str, QPointF, float, QSizeF, QRectF] | None = None
+        self.setMouseTracking(True)
+        self._toast = QLabel(self)
+        self._toast.setAlignment(Qt.AlignCenter)
+        self._toast.setStyleSheet("background: rgba(0,0,0,170); color: white; border-radius: 12px;"
+                                  "padding: 6px 14px; font: 600 15px 'Segoe UI';")
+        self._toast.hide()
+        self._toast_timer = QTimer(self, singleShot=True, interval=TOAST_MS, timeout=self._toast.hide)
         self._apply_on_top(cfg.always_on_top)
         self._place_initially()
+        self.refit()
         QShortcut(QKeySequence("Ctrl+S"), self, activated=self.save_screenshot)
         QShortcut(QKeySequence("Ctrl+Q"), self, activated=QApplication.quit)
+        for keys in ("Ctrl+=", "Ctrl++"):
+            QShortcut(QKeySequence(keys), self, activated=lambda: self.set_scale(self.view.scale + SCALE_STEP))
+        QShortcut(QKeySequence("Ctrl+-"), self, activated=lambda: self.set_scale(self.view.scale - SCALE_STEP))
+        QShortcut(QKeySequence("Ctrl+0"), self, activated=lambda: self.set_scale(AppConfig.scale))
 
     # --- положение и размер -------------------------------------------------
     def _place_initially(self) -> None:
@@ -75,8 +96,16 @@ class MirrorWindow(QWidget):
         screen = QGuiApplication.primaryScreen().availableGeometry()
         self.move(screen.center() - self.rect().center())
 
+    def _max_scale(self) -> float:
+        screen = self.screen() or QGuiApplication.primaryScreen()
+        return max_scale_for(QSizeF(screen.availableGeometry().size()), self.view.landscape)
+
     def refit(self) -> None:
-        """Подгоняет окно под виджет, сохраняя центр (например, при повороте)."""
+        """Подгоняет окно под виджет, сохраняя центр (например, при повороте).
+        Если после поворота телефон не помещается на экран — уменьшает его."""
+        limit = self._max_scale()
+        if self.view.scale > limit:
+            self.view.set_scale(limit)
         center = self.frameGeometry().center()
         self.adjustSize()
         self.resize(self.view.size())
@@ -86,24 +115,74 @@ class MirrorWindow(QWidget):
         self._cfg = self._cfg.with_changes(**changes)
         self.config_changed.emit(self._cfg)
 
-    def set_scale(self, scale: float) -> None:
-        scale = min(max(scale, SCALE_MIN), SCALE_MAX)
-        self.view.set_scale(scale)
-        self.refit()
-        self._update_config(scale=scale)
+    def set_scale(self, scale: float, edge: str = "", start_geom: QRectF | None = None,
+                  persist: bool = True) -> None:
+        """Меняет масштаб. С `edge` — держит противоположный край окна на месте."""
+        scale = clamp_scale(scale, self._max_scale())
+        if abs(scale - self.view.scale) >= 1e-3:
+            self.view.set_scale(scale)
+            if edge and start_geom is not None:
+                self.adjustSize()
+                self.resize(self.view.size())
+                self.move(anchored_pos(edge, start_geom, QSizeF(self.view.size())).toPoint())
+            else:
+                self.refit()
+        self._show_toast(f"{round(self.view.scale * 100)}%")
+        if persist:
+            self._update_config(scale=self.view.scale)
+
+    def fit_screen_height(self) -> None:
+        self.set_scale(self._max_scale())
+
+    def _show_toast(self, text: str) -> None:
+        self._toast.setText(text)
+        self._toast.adjustSize()
+        body = self.view.body_rect()
+        self._toast.move(int(body.center().x() - self._toast.width() / 2),
+                         int(body.center().y() - self._toast.height() / 2))
+        self._toast.show()
+        self._toast.raise_()
+        self._toast_timer.start()
 
     def _apply_on_top(self, on: bool) -> None:
         self.setWindowFlag(Qt.WindowStaysOnTopHint, on)
 
     # --- события мыши -------------------------------------------------------
+    def _edge_under(self, pos: QPointF) -> str:
+        return edge_at(pos, self.view.body_rect())
+
     def mousePressEvent(self, e) -> None:
-        if e.button() == Qt.LeftButton and self.windowHandle():
+        if e.button() != Qt.LeftButton:
+            return
+        edge = self._edge_under(e.position())
+        if edge:   # тянем за край — меняем масштаб
+            self._drag = (edge, e.globalPosition(), self.view.scale,
+                          QSizeF(self.size()), QRectF(self.geometry()))
+        elif self.windowHandle():
             self.windowHandle().startSystemMove()
+
+    def mouseMoveEvent(self, e) -> None:
+        if self._drag is None:
+            edge = self._edge_under(e.position())
+            if edge:
+                self.view.setCursor(EDGE_CURSORS[edge])
+            else:
+                self.view.unsetCursor()
+            return
+        edge, start, start_scale, start_size, start_geom = self._drag
+        delta = e.globalPosition() - start
+        scale = scale_from_drag(edge, start_scale, start_size, delta.x(), delta.y())
+        self.set_scale(scale, edge=edge, start_geom=start_geom, persist=False)
+
+    def mouseReleaseEvent(self, _e) -> None:
+        if self._drag is not None:
+            self._drag = None
+            self._update_config(scale=self.view.scale)
 
     def wheelEvent(self, e) -> None:
         if e.modifiers() & Qt.ControlModifier:
             step = SCALE_STEP if e.angleDelta().y() > 0 else -SCALE_STEP
-            self.set_scale(self._cfg.scale + step)
+            self.set_scale(self.view.scale + step)
 
     def mouseDoubleClickEvent(self, _e) -> None:
         self.showMinimized()
@@ -118,12 +197,21 @@ class MirrorWindow(QWidget):
         on_top.toggled.connect(self._toggle_on_top)
         menu.addAction(on_top)
 
-        size_menu = menu.addMenu("Размер")
-        for name, value in SIZE_PRESETS:
-            size_menu.addAction(name, lambda v=value: self.set_scale(v))
+        current = round(self.view.scale * 100)
+        size_menu = menu.addMenu(f"Масштаб: {current}%")
+        group_size = QActionGroup(size_menu)
+        for pct in PRESETS_PERCENT:
+            act = QAction(f"{pct}%", size_menu, checkable=True, checked=pct == current)
+            act.triggered.connect(lambda _=False, v=pct / 100: self.set_scale(v))
+            group_size.addAction(act)
+            size_menu.addAction(act)
+        size_menu.addAction("По высоте экрана", self.fit_screen_height)
         size_menu.addSeparator()
-        size_menu.addAction("Крупнее  (Ctrl + колесо)", lambda: self.set_scale(self._cfg.scale + SCALE_STEP))
-        size_menu.addAction("Мельче", lambda: self.set_scale(self._cfg.scale - SCALE_STEP))
+        size_menu.addAction("Крупнее  (Ctrl +)", lambda: self.set_scale(self.view.scale + SCALE_STEP))
+        size_menu.addAction("Мельче  (Ctrl −)", lambda: self.set_scale(self.view.scale - SCALE_STEP))
+        size_menu.addAction("По умолчанию  (Ctrl 0)", lambda: self.set_scale(AppConfig.scale))
+        hint = size_menu.addAction("Тяните за край телефона или Ctrl + колесо")
+        hint.setEnabled(False)
 
         color_menu = menu.addMenu("Цвет корпуса")
         group = QActionGroup(color_menu)
