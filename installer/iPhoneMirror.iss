@@ -36,7 +36,8 @@ Compression=lzma2/max
 SolidCompression=yes
 LZMAUseSeparateProcess=yes
 WizardStyle=modern
-CloseApplications=force
+; Спрашивать пользователя, прежде чем закрывать запущенный iPhone Mirror при обновлении.
+CloseApplications=yes
 RestartApplications=no
 
 [Languages]
@@ -75,7 +76,6 @@ Filename: "{sys}\netsh.exe"; \
 Filename: "{app}\{#AppExe}"; Description: "{cm:Launch}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
-Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM uxplay.exe"; Flags: runhidden; RunOnceId: "KillUxPlay"
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""{#FirewallRule}"""; \
   Flags: runhidden; RunOnceId: "DelFirewall"; Check: IsAdminInstallMode
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""{#FirewallRuleUsb}"""; \

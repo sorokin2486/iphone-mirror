@@ -13,6 +13,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Signal
 
+from .bonjour import choose_variant, is_bonjour_running
 from .config import AppConfig
 from .paths import BUNDLED_UXPLAY, BUNDLED_UXPLAY_DIR, gstreamer_env
 from .win_job import KillOnCloseJob
@@ -95,15 +96,17 @@ class UxPlayReceiver(QObject):
     def start(self) -> None:
         if self.is_running():
             return
-        exe = find_uxplay(self._cfg)
-        if exe is None:
+        base = find_uxplay(self._cfg)
+        if base is None:
             self._emit_log("UxPlay не найден. Запустите setup\\install.ps1 (см. README).")
             self.status_changed.emit("missing")
             return
+        exe, how = choose_variant(base, self._cfg.mdns_mode, is_bonjour_running())
+        self._emit_log(f"Объявление в сети: {how}")
         proc = QProcess(self)
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PATH", str(exe.parent) + os.pathsep + env.value("PATH"))
-        if exe == BUNDLED_UXPLAY:
+        if exe.parent == BUNDLED_UXPLAY.parent:
             for key, value in gstreamer_env(BUNDLED_UXPLAY_DIR).items():
                 env.insert(key, value)
         proc.setProcessEnvironment(env)

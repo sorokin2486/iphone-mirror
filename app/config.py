@@ -29,6 +29,7 @@ class AppConfig:
     always_on_top: bool = False
     scale: float = 0.8                      # масштаб «корпуса» телефона
     model_color: str = "natural"            # natural | black | white | blue
+    mdns_mode: str = "auto"                 # auto | bonjour | internal — как объявлять ПК в сети
     window_x: int = -1
     window_y: int = -1
 
@@ -37,6 +38,7 @@ class AppConfig:
 
 
 COLORS = ("natural", "black", "white", "blue")
+MDNS_MODES = ("auto", "bonjour", "internal")
 
 
 def validate(cfg: AppConfig) -> AppConfig:
@@ -47,8 +49,9 @@ def validate(cfg: AppConfig) -> AppConfig:
     fps = min(max(int(cfg.fps), 15), 120)
     res = cfg.max_resolution if _valid_resolution(cfg.max_resolution) else AppConfig.max_resolution
     color = cfg.model_color if cfg.model_color in COLORS else AppConfig.model_color
+    mdns = cfg.mdns_mode if cfg.mdns_mode in MDNS_MODES else AppConfig.mdns_mode
     return replace(cfg, device_name=name, video_port=port, scale=scale, fps=fps,
-                   max_resolution=res, model_color=color)
+                   max_resolution=res, model_color=color, mdns_mode=mdns)
 
 
 def _valid_resolution(value: str) -> bool:

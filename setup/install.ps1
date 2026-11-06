@@ -56,7 +56,15 @@ Write-Host "==> [3/3] Сборка UxPlay" -ForegroundColor Cyan
 # чтобы не передавать путь с пробелами через кавычки PowerShell 5.1.
 Push-Location $PSScriptRoot
 [Environment]::CurrentDirectory = $PSScriptRoot
-try { Invoke-Msys "bash ./build_uxplay.sh" } finally { Pop-Location }
+try {
+    Invoke-Msys "bash ./build_uxplay.sh"
+    # Вариант с Bonjour — только если Bonjour установлен (iTunes / «Устройства Apple»).
+    if (Test-Path "$env:SystemRoot\System32\dnssd.dll") {
+        Invoke-Msys "bash ./build_uxplay_bonjour.sh"
+    } else {
+        Write-Host "    Bonjour не найден — вариант UxPlay с Bonjour пропущен." -ForegroundColor Yellow
+    }
+} finally { Pop-Location }
 
 Write-Host ""
 Write-Host "Готово! Запускайте run.bat" -ForegroundColor Green

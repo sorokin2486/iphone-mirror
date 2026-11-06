@@ -34,6 +34,19 @@ Python, MSYS2 и GStreamer ставить не нужно: всё уже вну�
 Почему не «чистый» USB, как у QuickTime на Mac: на Windows для этого пришлось бы заменить
 драйвер Apple на WinUSB, после чего перестанут работать iTunes/«Устройства Apple».
 
+## VPN
+
+Сам поток идёт по локальной сети, VPN его обычно не трогает. Проблема бывает с **поиском**:
+iPhone находит ПК по mDNS (multicast), а VPN в режиме TUN (sing-box, MantaRay, Hiddify…)
+забирает себе маршрут multicast — объявления уходят в туннель, и iPhone ПК не видит.
+
+Поэтому, если на ПК есть служба **Bonjour** (ставится с iTunes / «Устройствами Apple»),
+приложение использует вариант UxPlay, который объявляет себя через Bonjour — он рассылает
+объявления во все сети (Ethernet, Wi‑Fi, USB) независимо от VPN. Без Bonjour используется
+встроенный mDNS. Режим можно задать в `config.json`: `"mdns_mode": "auto" | "bonjour" | "internal"`.
+
+На iPhone VPN мешает, только если в нём включено «блокировать локальную сеть» / kill switch.
+
 ## Как это устроено
 
 ```
@@ -144,11 +157,13 @@ app/
   paths.py         пути для режима исходников и .exe
   win_job.py       Job Object: uxplay.exe завершается вместе с приложением
   usb_link.py      определение iPhone по кабелю / через точку доступа
+  bonjour.py       выбор объявления в сети: Bonjour или встроенный mDNS
 assets/            иконка
 iphone_mirror.py   точка входа для PyInstaller
 setup/
   install.ps1      установка всего
   build_uxplay.sh  сборка UxPlay в MSYS2
+  build_uxplay_bonjour.sh  вариант UxPlay с Bonjour (uxplay-bonjour.exe)
   build_exe.ps1    сборка .exe
   bundle_uxplay.sh переносимый комплект UxPlay + GStreamer
   make_icon.py     генерация иконки

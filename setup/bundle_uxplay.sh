@@ -16,6 +16,12 @@ rm -rf "$OUT"
 mkdir -p "$OUT/bin" "$OUT/lib/gstreamer-1.0" "$OUT/libexec/gstreamer-1.0" "$OUT/etc"
 
 cp "$PREFIX/bin/uxplay.exe" "$OUT/bin/"
+# Вариант с Bonjour (если собран): зависит от системной dnssd.dll, её не копируем.
+if [ -f "$PREFIX/bin/uxplay-bonjour.exe" ]; then
+  cp "$PREFIX/bin/uxplay-bonjour.exe" "$OUT/bin/"
+else
+  echo "WARN: нет uxplay-bonjour.exe (setup/build_uxplay_bonjour.sh) — будет только встроенный mDNS"
+fi
 cp "$PREFIX/libexec/gstreamer-1.0/gst-plugin-scanner.exe" "$OUT/libexec/gstreamer-1.0/"
 for p in "${PLUGINS[@]}"; do
   f="$PREFIX/lib/gstreamer-1.0/libgst$p.dll"
