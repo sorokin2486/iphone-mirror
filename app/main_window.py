@@ -3,15 +3,11 @@
 """Безрамочное окно-«айфон»: перетаскивание, масштаб (края, колесо, клавиши), меню."""
 from __future__ import annotations
 
-from datetime import datetime
-from pathlib import Path
-
 from PySide6.QtCore import QPoint, QPointF, QRectF, QSizeF, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QKeySequence, QShortcut
-from PySide6.QtWidgets import (QApplication, QDialog, QInputDialog, QLabel, QMenu, QMessageBox,
-                               QPlainTextEdit, QVBoxLayout, QWidget)
+from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QImage, QKeySequence, QShortcut
+from PySide6.QtWidgets import QApplication, QLabel, QMenu, QVBoxLayout, QWidget
 
-from .about_dialog import AboutDialog
+from .common_actions import CommonActions
 from .config import COLORS, AppConfig
 from .phone_view import PhoneView
 from .scaling import (PRESETS_PERCENT, anchored_pos, clamp_scale, edge_at, max_scale_for,
@@ -27,43 +23,17 @@ EDGE_CURSORS = {
     "topleft": Qt.SizeFDiagCursor, "bottomright": Qt.SizeFDiagCursor,
     "topright": Qt.SizeBDiagCursor, "bottomleft": Qt.SizeBDiagCursor,
 }
-SCREENSHOT_DIR = Path.home() / "Pictures" / "iPhone Mirror"
-USB_HELP = (
-    "Трансляция по кабелю — без Wi‑Fi и роутера:\n\n"
-    "1. На iPhone: Настройки → Режим модема → «Разрешать другим» — включить.\n"
-    "2. Подключите iPhone к ПК кабелем, на iPhone нажмите «Доверять».\n"
-    "3. Через несколько секунд на экране окна появится зелёная плашка «USB».\n"
-    "4. Пункт управления → Повтор экрана → «{name}».\n\n"
-    "Нужен драйвер Apple (приложение «Устройства Apple» из Microsoft Store или iTunes).\n"
-    "Видео идёт напрямую по кабелю и не тратит мобильный трафик. Если Windows начнёт "
-    "выходить в интернет через iPhone, отключите на iPhone мобильные данные.\n\n"
-    "{state}"
-)
 
 
-class LogDialog(QDialog):
-    def __init__(self, lines: list[str], parent=None) -> None:
-        super().__init__(parent)
-        self.setWindowTitle("Журнал UxPlay")
-        self.resize(760, 420)
-        self.text = QPlainTextEdit(readOnly=True)
-        self.text.setPlainText("\n".join(lines))
-        lay = QVBoxLayout(self)
-        lay.addWidget(self.text)
-
-    def append(self, line: str) -> None:
-        self.text.appendPlainText(line)
-
-
-class MirrorWindow(QWidget):
+class MirrorWindow(QWidget, CommonActions):
     config_changed = Signal(object)       # AppConfig
     restart_requested = Signal()
+    mode_requested = Signal(str)          # "phone" | "window"
 
     def __init__(self, cfg: AppConfig, log_provider) -> None:
         super().__init__(None, Qt.FramelessWindowHint | Qt.Window)
         self._cfg = cfg
         self._log_provider = log_provider
-        self._log_dialog: LogDialog | None = None
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setWindowTitle(f"iPhone Mirror — {cfg.device_name}")
         self.view = PhoneView(cfg.scale, cfg.model_color, cfg.device_name, self)
@@ -87,6 +57,39 @@ class MirrorWindow(QWidget):
             QShortcut(QKeySequence(keys), self, activated=lambda: self.set_scale(self.view.scale + SCALE_STEP))
         QShortcut(QKeySequence("Ctrl+-"), self, activated=lambda: self.set_scale(self.view.scale - SCALE_STEP))
         QShortcut(QKeySequence("Ctrl+0"), self, activated=lambda: self.set_scale(AppConfig.scale))
+
+    # --- показ трансляции (общий интерфейс с обычным окном) -------------------
+    @property
+    def screenshot_image(self) -> QImage | None:
+        return self.view.current_image
+
+    @property
+    def is_streaming(self) -> bool:
+        return self.view.current_image is not None
+
+    def show_frame(self, image: QImage) -> None:
+        was_landscape = self.view.landscape
+        self.view.show_frame(image)
+        if self.view.landscape != was_landscape:
+            self.refit()
+
+    def set_streaming(self, active: bool) -> None:
+        self.view.set_streaming(active)
+        self.refit()
+
+    def set_status(self, status: str) -> None:
+        self.view.set_status(status)
+
+    def set_link(self, link) -> None:
+        self._link = link
+        self.view.set_link(link.kind if link else None)
+
+    def on_device_name_changed(self, name: str) -> None:
+        self.view.set_device_name(name)
+
+    def save_geometry(self) -> None:
+        pos = self.pos()
+        self._update_config(window_x=pos.x(), window_y=pos.y())
 
     # --- положение и размер -------------------------------------------------
     def _place_initially(self) -> None:
@@ -113,10 +116,6 @@ class MirrorWindow(QWidget):
         self.adjustSize()
         self.resize(self.view.size())
         self.move(center - self.rect().center())
-
-    def _update_config(self, **changes) -> None:
-        self._cfg = self._cfg.with_changes(**changes)
-        self.config_changed.emit(self._cfg)
 
     def set_scale(self, scale: float, edge: str = "", start_geom: QRectF | None = None,
                   persist: bool = True) -> None:
@@ -224,19 +223,9 @@ class MirrorWindow(QWidget):
             group.addAction(act)
             color_menu.addAction(act)
 
-        menu.addSeparator()
-        menu.addAction("Скриншот экрана  (Ctrl+S)", self.save_screenshot)
-        sound = QAction("Звук на ПК", menu, checkable=True, checked=self._cfg.audio_enabled)
-        sound.toggled.connect(self._toggle_audio)
-        menu.addAction(sound)
-        menu.addAction("Имя приёмника…", self._rename)
-        menu.addAction("Подключение по кабелю (USB)…", self.show_usb_help)
-        menu.addSeparator()
-        menu.addAction("Перезапустить приёмник", self.restart_requested.emit)
-        menu.addAction("Журнал UxPlay", self.show_log)
-        menu.addAction("О программе…", lambda: AboutDialog(self).exec())
-        menu.addAction("Свернуть  (двойной клик)", self.showMinimized)
-        menu.addAction("Выход  (Ctrl+Q)", QApplication.quit)
+        self.add_common_menu(menu)
+        menu.insertAction(menu.actions()[-1], QAction("Свернуть  (двойной клик)", menu,
+                                                      triggered=self.showMinimized))
         return menu
 
     def _toggle_on_top(self, on: bool) -> None:
@@ -247,57 +236,3 @@ class MirrorWindow(QWidget):
     def _set_color(self, key: str) -> None:
         self.view.set_color(key)
         self._update_config(model_color=key)
-
-    def _toggle_audio(self, on: bool) -> None:
-        self._update_config(audio_enabled=on)
-        self.restart_requested.emit()
-
-    def _rename(self) -> None:
-        name, ok = QInputDialog.getText(self, "Имя приёмника",
-                                        "Как ПК будет называться в «Повторе экрана»:",
-                                        text=self._cfg.device_name)
-        if ok and name.strip():
-            self._update_config(device_name=name)
-            self.view.set_device_name(self._cfg.device_name)
-            self.setWindowTitle(f"iPhone Mirror — {self._cfg.device_name}")
-            self.restart_requested.emit()
-
-    def save_screenshot(self) -> None:
-        image = self.view.current_image
-        if image is None:
-            QMessageBox.information(self, "Скриншот", "Нет активной трансляции.")
-            return
-        try:
-            SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
-        except OSError as exc:
-            QMessageBox.warning(self, "Скриншот", f"Не удалось создать папку: {exc}")
-            return
-        path = SCREENSHOT_DIR / f"iPhone_{datetime.now():%Y-%m-%d_%H-%M-%S}.png"
-        if image.save(str(path)):
-            QMessageBox.information(self, "Скриншот", f"Сохранено:\n{path}")
-        else:
-            QMessageBox.warning(self, "Скриншот", "Не удалось сохранить файл.")
-
-    def set_link(self, link) -> None:
-        self._link = link
-        self.view.set_link(link.kind if link else None)
-
-    def show_usb_help(self) -> None:
-        link = getattr(self, "_link", None)
-        if link is None:
-            state = "Сейчас: прямого подключения к iPhone нет."
-        else:
-            how = "по кабелю" if link.kind == "usb" else "через точку доступа iPhone"
-            state = f"Сейчас: iPhone подключён {how} ({link.interface}, IP ПК {link.pc_ip})."
-        QMessageBox.information(self, "Подключение по кабелю", USB_HELP.format(
-            name=self._cfg.device_name, state=state))
-
-    def show_log(self) -> None:
-        if self._log_dialog is None:
-            self._log_dialog = LogDialog(self._log_provider(), self)
-        self._log_dialog.show()
-        self._log_dialog.raise_()
-
-    def append_log(self, line: str) -> None:
-        if self._log_dialog is not None:
-            self._log_dialog.append(line)

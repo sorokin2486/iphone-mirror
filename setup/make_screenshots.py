@@ -87,6 +87,18 @@ def main() -> None:
     usb = phone_image(0.62, "blue", link="usb")
     save(compose(brand_background(560, 680), [(usb, 280, 340)]), "usb.png")
 
+    # Режим «обычное окно» с панелью инструментов (горизонтальная картинка).
+    from app.config import AppConfig
+    from app.plain_window import PlainWindow
+    plain = PlainWindow(AppConfig(view_mode="window", plain_x=50, plain_y=50, plain_w=1000, plain_h=480),
+                        lambda: [])
+    plain.show()
+    plain.show_frame(wallpaper_frame(1920, 886))
+    plain.fit_window_to_picture()
+    app.processEvents()
+    save(plain.grab().toImage(), "window-mode.png")
+    plain.close()
+
     # О программе.
     about = AboutDialog()
     about.show()

@@ -34,6 +34,14 @@ class AppConfig:
     mdns_mode: str = "auto"                 # auto | bonjour | internal — как объявлять ПК в сети
     window_x: int = -1
     window_y: int = -1
+    view_mode: str = "phone"                # phone — окно-«айфон» | window — обычное окно
+    fit_mode: str = "fit"                   # fit | stretch | fill — для обычного окна
+    rotation: int = 0                       # поворот картинки в обычном окне, ×90° по часовой
+    mirrored: bool = False                  # зеркально по горизонтали
+    plain_x: int = -1                       # геометрия обычного окна
+    plain_y: int = -1
+    plain_w: int = -1
+    plain_h: int = -1
 
     def with_changes(self, **changes) -> "AppConfig":
         return validate(replace(self, **changes))
@@ -41,6 +49,8 @@ class AppConfig:
 
 COLORS = ("natural", "black", "white", "blue")
 MDNS_MODES = ("auto", "bonjour", "internal")
+VIEW_MODES = ("phone", "window")
+FIT_MODES = ("fit", "stretch", "fill")
 
 
 def validate(cfg: AppConfig) -> AppConfig:
@@ -52,8 +62,11 @@ def validate(cfg: AppConfig) -> AppConfig:
     res = cfg.max_resolution if _valid_resolution(cfg.max_resolution) else AppConfig.max_resolution
     color = cfg.model_color if cfg.model_color in COLORS else AppConfig.model_color
     mdns = cfg.mdns_mode if cfg.mdns_mode in MDNS_MODES else AppConfig.mdns_mode
+    view = cfg.view_mode if cfg.view_mode in VIEW_MODES else AppConfig.view_mode
+    fit = cfg.fit_mode if cfg.fit_mode in FIT_MODES else AppConfig.fit_mode
     return replace(cfg, device_name=name, video_port=port, scale=scale, fps=fps,
-                   max_resolution=res, model_color=color, mdns_mode=mdns)
+                   max_resolution=res, model_color=color, mdns_mode=mdns,
+                   view_mode=view, fit_mode=fit, rotation=int(cfg.rotation) % 4)
 
 
 def _valid_resolution(value: str) -> bool:

@@ -39,6 +39,9 @@
   together with your phone.
 - **Resizable the natural way.** Drag any edge or corner of the phone, or press Ctrl + / − / 0,
   or pick 50–150% / "fit screen height". It never grows larger than your screen.
+- **Or a plain window, ApowerMirror‑style.** Prefer no phone frame? Switch to a regular Windows window
+  with a toolbar: rotate left/right, mirror, fit / stretch / fill, fullscreen (F11), always on top,
+  screenshot, and "fit window to picture". The window follows the picture when you turn the iPhone.
 - **Respectful to your system.** One instance only. The receiver process is tied to the app and can't
   be left running in the background. The firewall rule only allows devices **from your local network**.
 - **Free and open source (GPL‑3.0).** No watermark, no time limit, no ads, no telemetry.
@@ -53,6 +56,9 @@
 <td align="center"><sub>The green <b>USB</b> badge appears when the cable link is up</sub></td>
 </tr>
 </table>
+
+<p align="center"><img src="docs/images/window-mode.png" alt="Plain window mode with toolbar" width="85%"><br>
+<sub>Plain window mode: toolbar on the right — fullscreen, on top, rotate, mirror, fit/stretch/fill, screenshot</sub></p>
 
 ## Quick start
 
@@ -77,8 +83,10 @@ off **Cellular Data** on the iPhone — mirroring keeps working.
 
 | Action | How |
 |---|---|
+| Switch view | right‑click → Window view: iPhone frame / plain window (or the phone button on the toolbar) |
 | Move the window | drag the phone |
 | Resize | drag an edge/corner · Ctrl + mouse wheel · Ctrl + / Ctrl − / Ctrl 0 · right‑click → Scale |
+| Plain window tools | Ctrl+R / Ctrl+Shift+R rotate · Ctrl+M mirror · F11 or double‑click fullscreen · Esc exit |
 | Menu | right‑click: always on top, frame color, sound on/off, receiver name, USB help, log, about |
 | Screenshot of the iPhone screen | Ctrl + S (saved to `Pictures\iPhone Mirror`) |
 | Minimize / quit | double‑click / Ctrl + Q |
@@ -147,7 +155,11 @@ app/
   phone_skin.py       iPhone frame geometry and painting
   lock_screen.py      iOS-style waiting screen
   phone_view.py       phone + video widget, landscape rotation
-  main_window.py      frameless window, menu, screenshots
+  main_window.py      iPhone-frame window: drag, scale, menu
+  plain_window.py     plain window with toolbar (rotate, mirror, fit modes, fullscreen)
+  plain_view.py       video area of the plain window
+  image_ops.py        rotation / mirror / fit-stretch-fill geometry
+  common_actions.py   menu items shared by both views
   scaling.py          edge-drag scaling math
   single_instance.py  one instance only
   win_job.py          Job Object: UxPlay dies with the app
